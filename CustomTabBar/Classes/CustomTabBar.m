@@ -27,6 +27,8 @@
 
 #import "CustomTabBar.h"
 
+#import "UIImage+Effects.h"
+
 #define GLOW_IMAGE_TAG 2394858
 #define TAB_ARROW_IMAGE_TAG 2394859
 #define SELECTED_ITEM_TAG 2394860
@@ -279,6 +281,7 @@
     [button setImage:buttonImage forState:UIControlStateNormal];
     [button setImage:buttonPressedImage forState:UIControlStateHighlighted];
     [button setImage:buttonPressedImage forState:UIControlStateSelected];
+    [button setImage:[buttonImage imageByApplyingAlpha:0.2] forState:UIControlStateDisabled];
     
     // Ask the delegate for the highlighted/selected state image & set it as the selected background state
     [button setBackgroundImage:[delegate selectedItemImage] forState:UIControlStateHighlighted];
