@@ -34,6 +34,8 @@
 - (UIImage*) glowImage;
 - (UIImage*) selectedItemImage;
 - (UIImage*) tabBarArrowImage;
+- (NSString*) selectedTextForButtonAtIndex:(NSUInteger)itemIndex;
+- (NSString*) unselectedTextForButtonAtIndex:(NSUInteger)itemIndex;
 
 @optional
 - (void) touchUpInsideItemAtIndex:(NSUInteger)itemIndex;
@@ -50,6 +52,9 @@
 }
 
 @property (nonatomic, retain) NSMutableArray* buttons;
+@property (nonatomic, strong) NSMutableArray* buttonLabels;
+@property (nonatomic, strong) NSMutableArray* buttonSelectedText;
+@property (nonatomic, strong) NSMutableArray* buttonUnselectedText;
 
 - (id) initWithItemCount:(NSUInteger)itemCount itemSize:(CGSize)itemSize tag:(NSInteger)objectTag delegate:(NSObject <CustomTabBarDelegate>*)customTabBarDelegate;
 
@@ -62,5 +67,7 @@
 - (void)deselectButton:(UIButton *)button;
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
+
+- (void)enableToolbarButton:(BOOL)enable atIndex:(NSUInteger)buttonIndex;
 
 @end

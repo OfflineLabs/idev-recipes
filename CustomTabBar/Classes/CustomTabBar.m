@@ -44,6 +44,9 @@
 
 @implementation CustomTabBar
 @synthesize buttons;
+@synthesize buttonLabels = _buttonLabels;
+@synthesize buttonSelectedText = _buttonSelectedText;
+@synthesize buttonUnselectedText = _buttonUnselectedText;
 
 - (id) initWithItemCount:(NSUInteger)itemCount itemSize:(CGSize)itemSize tag:(NSInteger)objectTag delegate:(NSObject <CustomTabBarDelegate>*)customTabBarDelegate
 {
@@ -69,6 +72,9 @@
         
         // Initalize the array we use to store our buttons
         self.buttons = [[NSMutableArray alloc] initWithCapacity:itemCount];
+        self.buttonLabels = [[NSMutableArray alloc] initWithCapacity:itemCount];
+        self.buttonSelectedText = [[NSMutableArray alloc] initWithCapacity:itemCount];
+        self.buttonUnselectedText = [[NSMutableArray alloc] initWithCapacity:itemCount];
         
         // horizontalOffset tracks the proper x value as we add buttons as subviews
         CGFloat horizontalOffset = 0;
@@ -99,12 +105,55 @@
             // Add the button as our subview
             [self addSubview:button];
             
+            // add a label for each button
+            UILabel *buttonLabel = [[UILabel alloc] initWithFrame:CGRectMake(horizontalOffset, button.frame.size.height-14, button.frame.size.width, 12)];
+            buttonLabel.backgroundColor = [UIColor clearColor];
+            buttonLabel.textColor = [UIColor lightGrayColor];
+            buttonLabel.font = [UIFont boldSystemFontOfSize:11];
+            buttonLabel.textAlignment = UITextAlignmentCenter;
+            [self.buttonLabels addObject:buttonLabel];
+            
+            if ([delegate respondsToSelector:@selector(selectedTextForButtonAtIndex:)]) {
+                [self.buttonSelectedText addObject:[delegate selectedTextForButtonAtIndex:i]];
+            }
+            
+            if ([delegate respondsToSelector:@selector(unselectedTextForButtonAtIndex:)]) {
+                NSString *text = [delegate unselectedTextForButtonAtIndex:i];
+                [self.buttonUnselectedText addObject:text];
+                buttonLabel.text = text;
+            }
+            
+            [self addSubview:buttonLabel];
+            
             // Advance the horizontal offset
             horizontalOffset = horizontalOffset + itemSize.width;
         }
     }
     
     return self;
+}
+
+- (void)highlightTextInLabel:(UILabel*)label
+{
+    label.textColor = [UIColor whiteColor];
+}
+
+- (void)unhighlightTextInLabel:(UILabel*)label
+{
+    label.textColor = [UIColor lightGrayColor];
+}
+
+- (void)toggleTextInLabel:(UIButton *)button
+{
+    NSUInteger index = [self.buttons indexOfObject:button];
+    if (index != -1) {
+        UILabel *buttonLabel = [self.buttonLabels objectAtIndex:index];
+        if (buttonLabel.textColor == [UIColor whiteColor]) {
+            [self unhighlightTextInLabel:buttonLabel];
+        } else {
+            [self highlightTextInLabel:buttonLabel];
+        }
+    }
 }
 
 - (void)selectButton:(UIButton *)button
@@ -128,6 +177,11 @@
     {
         [self addTabBarArrowAtIndex:selectedIndex];
     }
+    
+    NSUInteger index = [self.buttons indexOfObject:button];
+    UILabel *buttonLabel = [self.buttonLabels objectAtIndex:index];
+    [self highlightTextInLabel:buttonLabel];
+    buttonLabel.text = [self.buttonSelectedText objectAtIndex:index];
 }
 
 - (void)deselectButton:(UIButton *)button
@@ -135,6 +189,11 @@
     button.selected = NO;
     button.highlighted = NO;
     button.tag = 0;
+    
+    NSUInteger index = [self.buttons indexOfObject:button];
+    UILabel *buttonLabel = [self.buttonLabels objectAtIndex:index];
+    [self unhighlightTextInLabel:buttonLabel];
+    buttonLabel.text = [self.buttonUnselectedText objectAtIndex:index];
 }
 
 -(void) dimAllButtonsExcept:(UIButton*)selectedButton
@@ -155,6 +214,8 @@
 - (void)touchDownAction:(UIButton*)button
 {
     //[self dimAllButtonsExcept:button];
+    
+    [self toggleTextInLabel:button];
     
     if ([delegate respondsToSelector:@selector(touchDownAtItemAtIndex:)])
         [delegate touchDownAtItemAtIndex:[buttons indexOfObject:button]];
@@ -180,6 +241,8 @@
 
 - (void)dragEnterExitAction:(UIButton*)button
 {
+    [self toggleTextInLabel:button];
+    
     if ([delegate respondsToSelector:@selector(dragEnterExitAtIndex:)])
         [delegate dragEnterExitAtIndex:[buttons indexOfObject:button]];
   
@@ -401,6 +464,25 @@
     // Move the arrow to the new button location
     UIButton* selectedButton = (UIButton*)[self viewWithTag:SELECTED_ITEM_TAG];
     [self dimAllButtonsExcept:selectedButton];
+}
+
+- (void)enableToolbarButton:(BOOL)enable atIndex:(NSUInteger)buttonIndex 
+{
+    UIButton *button = ((UIButton*)[self.buttons objectAtIndex:buttonIndex]);
+    button.enabled = enable;
+    
+    if (!enable) {
+        [self deselectItemAtIndex:buttonIndex];
+        [button setBackgroundImage:NULL forState:UIControlStateNormal];
+    }
+    
+    UILabel *buttonLabel = [self.buttonLabels objectAtIndex:buttonIndex];
+    
+    if (enable) {
+        buttonLabel.alpha = 1;
+    } else {
+        buttonLabel.alpha = 0.3;
+    }
 }
 
 
